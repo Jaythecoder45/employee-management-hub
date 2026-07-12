@@ -1,0 +1,52 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Assign Task to {{ employee.first_name }} | Employee Hub{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 600px; margin: 0 auto;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <h2 class="form-title" style="margin: 0;">Assign Task to {{ employee.first_name }} {{ employee.last_name }}</h2>
+        <a href="{% url 'employee_detail' employee.pk %}" class="btn btn-secondary">Cancel</a>
+    </div>
+
+    <form method="post" class="django-form" novalidate>
+        {% csrf_token %}
+        
+        <div class="form-field-group">
+            <label class="form-label" for="id_title">Task Title</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <span class="field-error">{{ form.title.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-field-group">
+            <label class="form-label" for="id_description">Task Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <span class="field-error">{{ form.description.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-field-group">
+            <label class="form-label" for="id_due_date">Due Date</label>
+            {{ form.due_date }}
+            {% if form.due_date.errors %}
+                <span class="field-error">{{ form.due_date.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-field-group">
+            <label class="form-label" for="id_status">Task Status</label>
+            {{ form.status }}
+            {% if form.status.errors %}
+                <span class="field-error">{{ form.status.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem; margin-top: 1.5rem;">
+            Assign Task
+        </button>
+    </form>
+</div>
+{% endblock %}

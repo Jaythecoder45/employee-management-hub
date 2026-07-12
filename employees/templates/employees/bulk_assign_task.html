@@ -1,0 +1,159 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}{{ title }} | Employee Hub{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <h2 class="form-title" style="margin: 0;">{{ title }}</h2>
+        <a href="{% if dept_name %}{% url 'department_view' dept_name %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-secondary">Cancel</a>
+    </div>
+
+    <form method="post" class="django-form" novalidate>
+        {% csrf_token %}
+        {% if dept_name %}
+            <input type="hidden" name="department" value="{{ dept_name }}">
+        {% endif %}
+        
+        <!-- Task Info Block -->
+        <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-hover); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 2rem;">
+            <h3 style="color: var(--primary); font-size: 1.1rem; margin-top: 0; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span>Task Specification</span>
+            </h3>
+
+            <div class="form-field-group">
+                <label class="form-label" for="id_title">Task Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <span class="field-error">{{ form.title.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-field-group">
+                <label class="form-label" for="id_description">Task Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <span class="field-error">{{ form.description.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-field-group">
+                <label class="form-label" for="id_due_date">Due Date</label>
+                {{ form.due_date }}
+                {% if form.due_date.errors %}
+                    <span class="field-error">{{ form.due_date.errors.0 }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Target Employees Checklist Block -->
+        <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-hover); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                <h3 style="color: var(--primary); font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Target Employees</span>
+                </h3>
+                <div style="font-size: 0.8rem;">
+                    <button type="button" onclick="toggleAllCheckboxes(true)" style="background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600; padding: 0 0.5rem;">Select All</button>
+                    <span style="color: var(--text-muted);">|</span>
+                    <button type="button" onclick="toggleAllCheckboxes(false)" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 0 0.5rem;">Clear All</button>
+                </div>
+            </div>
+            
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: -0.5rem; margin-bottom: 1.25rem;">Choose the employees who should receive this task assignment. Only active employees are listed.</p>
+
+            {% if form.employees.errors %}
+                <span class="field-error" style="display: block; margin-bottom: 1rem;">{{ form.employees.errors.0 }}</span>
+            {% endif %}
+
+            <!-- Live Filter Search Box -->
+            <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+                <input type="text" id="employee-search" placeholder="Search by name, job title, or email..." style="flex: 1; min-width: 250px; padding: 0.65rem 1rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border-hover); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.9rem; outline: none; transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-hover)'" oninput="filterEmployees()">
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="selectFiltered(true)" style="padding: 0.65rem 1rem; font-size: 0.85rem; border-color: rgba(99, 102, 241, 0.3);">Select Matches</button>
+                    <button type="button" class="btn btn-secondary" onclick="selectFiltered(false)" style="padding: 0.65rem 1rem; font-size: 0.85rem; border-color: rgba(99, 102, 241, 0.3); color: var(--text-muted);">Clear Matches</button>
+                </div>
+            </div>
+
+            <!-- Custom Checkbox Grid layout -->
+            <div class="checkbox-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem; max-height: 350px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--border-hover); border-radius: var(--radius-sm); background: rgba(0,0,0,0.15);">
+                {% for checkbox in form.employees %}
+                    <label class="employee-checkbox-label" data-search="{{ checkbox.choice_label|lower }}" style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0.85rem; border-radius: var(--radius-sm); background: rgba(255,255,255,0.02); border: 1px solid var(--border-hover); cursor: pointer; transition: var(--transition); user-select: none;" onmouseover="this.style.borderColor='rgba(99, 102, 241, 0.3)'" onmouseout="this.style.borderColor='var(--border-hover)'">
+                        <span style="display: flex; align-items: center; margin-top: 0.15rem;">{{ checkbox.tag }}</span>
+                        <span class="employee-text" style="font-size: 0.9rem; color: var(--text-primary); font-weight: 500; display: flex; flex-direction: column;">{{ checkbox.choice_label }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+            Assign Task to Selected Employees
+        </button>
+    </form>
+</div>
+
+<script>
+    function toggleAllCheckboxes(checked) {
+        const checkboxes = document.querySelectorAll('.checkbox-grid input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = checked);
+    }
+
+    function filterEmployees() {
+        const query = document.getElementById('employee-search').value.toLowerCase().trim();
+        const items = document.querySelectorAll('.employee-checkbox-label');
+        
+        items.forEach(item => {
+            const searchText = item.getAttribute('data-search') || '';
+            if (searchText.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function selectFiltered(checked) {
+        const items = document.querySelectorAll('.employee-checkbox-label');
+        items.forEach(item => {
+            if (item.style.display !== 'none') {
+                const cb = item.querySelector('input[type="checkbox"]');
+                if (cb) {
+                    cb.checked = checked;
+                }
+            }
+        });
+    }
+
+    // Split and format choice labels on load
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('.employee-checkbox-label').forEach(label => {
+            const textSpan = label.querySelector('.employee-text');
+            const fullText = textSpan.innerText;
+            if (fullText.includes('|')) {
+                const parts = fullText.split('|').map(p => p.trim());
+                const name = parts[0];
+                const title = parts[1];
+                const email = parts[2];
+                
+                textSpan.innerHTML = `
+                    <span style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">${name}</span>
+                    <span style="font-size: 0.75rem; color: var(--primary); margin-top: 0.15rem; font-weight: 500;">${title}</span>
+                    <span style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.15rem;">${email}</span>
+                `;
+            }
+        });
+    });
+</script>
+{% endblock %}

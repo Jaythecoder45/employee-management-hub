@@ -1,0 +1,50 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Import Staff | Employee Hub{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 720px; margin: 0 auto; padding: 2rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <h2 class="form-title" style="margin: 0;">Bulk Employee Import</h2>
+        <a href="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-secondary">Back</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="django-form">
+        {% csrf_token %}
+        
+        <div style="background: rgba(99, 102, 241, 0.05); border: 1px dashed var(--primary); border-radius: var(--radius-lg); padding: 3rem 2rem; text-align: center; margin-bottom: 2rem; transition: var(--transition);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary); margin-bottom: 1rem;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.125rem;">Select CSV File</h4>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0 0 1.5rem 0;">Drag and drop your spreadsheet file here or browse</p>
+            <input type="file" name="csv_file" accept=".csv" required style="display: inline-block; font-size: 0.875rem; color: var(--text-secondary);">
+        </div>
+
+        <div style="background-color: var(--card-bg); border: 1px solid var(--border-hover); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="color: var(--text-primary); font-size: 1rem; margin-top: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--warning);">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>Import Guidelines</span>
+            </h3>
+            <ul style="color: var(--text-secondary); font-size: 0.85rem; padding-left: 1.25rem; margin: 0; line-height: 1.6;">
+                <li>The first row of the CSV file must be headers.</li>
+                <li><strong>Expected headers:</strong> <code>First Name, Last Name, Email, Phone, Job Title, Department, Salary, Hire Date, Status</code></li>
+                <li><strong>Salary:</strong> Enter raw numbers (e.g. <code>75000</code> or <code>68500.50</code>). Do not include currency symbols.</li>
+                <li><strong>Hire Date:</strong> Must use the format <code>YYYY-MM-DD</code> (e.g. <code>2026-03-15</code>).</li>
+                <li><strong>Department:</strong> Must be one of: <code>Engineering, Sales, HR, Marketing, Finance, Operations</code>.</li>
+                <li><strong>Status:</strong> Must be one of: <code>Active, Inactive, On Leave</code>.</li>
+            </ul>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+            Upload and Process Import
+        </button>
+    </form>
+</div>
+{% endblock %}

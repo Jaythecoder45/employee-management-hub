@@ -1,0 +1,427 @@
+{% extends 'employees/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | Employee Hub{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="stats-grid">
+    <!-- Total Employees -->
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Total Employees</span>
+            <span class="stat-value">{{ total_count }}</span>
+        </div>
+    </div>
+
+    <!-- Active Employees -->
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Active Staff</span>
+            <span class="stat-value">{{ active_count }}</span>
+        </div>
+    </div>
+
+    <!-- On Leave Employees -->
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">On Leave</span>
+            <span class="stat-value">{{ on_leave_count }}</span>
+        </div>
+    </div>
+
+    <!-- Average Salary -->
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Average Salary</span>
+            <span class="stat-value">₹{{ avg_salary|floatformat:2 }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics Dashboard Charts -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 2rem;">
+    <!-- Salary Analytics Chart -->
+    <div class="chart-card">
+        <h3 class="chart-title">Average Salary by Department (₹)</h3>
+        <div style="position: relative; height: 220px; width: 100%;">
+            <canvas id="deptSalaryChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Department Distribution Chart -->
+    <div class="chart-card">
+        <h3 class="chart-title">Staff Headcount</h3>
+        <div style="position: relative; height: 220px; width: 100%;">
+            <canvas id="deptHeadcountChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Activity Timeline Feed -->
+    <div class="chart-card">
+        <h3 class="chart-title">System Activity Log</h3>
+        <div class="timeline" style="margin-top: 1rem; max-height: 220px; overflow-y: auto; padding-right: 0.5rem;">
+            {% for log in activity_logs %}
+            <div class="timeline-item" style="position: relative; padding-left: 1.5rem; padding-bottom: 1.25rem;">
+                <!-- Timeline Dot -->
+                <div style="position: absolute; left: 4px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background-color: {% if log.action_type == 'Create' %}#10b981{% elif log.action_type == 'Delete' %}#ef4444{% elif log.action_type == 'Import' %}#f59e0b{% else %}#6366f1{% endif %}; box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);"></div>
+                <!-- Timeline Vertical Line -->
+                {% if not forloop.last %}
+                <div style="position: absolute; left: 7px; top: 12px; bottom: 0; width: 2px; background-color: var(--border-hover);"></div>
+                {% endif %}
+                <div style="font-size: 0.825rem; font-weight: 600; color: var(--text-primary); line-height: 1.4;">
+                    {{ log.description }}
+                </div>
+                <div style="font-size: 0.725rem; color: var(--text-secondary); margin-top: 0.25rem; display: flex; justify-content: space-between;">
+                    <span>by {{ log.user.username|default:"System" }}</span>
+                    <span>{{ log.timestamp|timesince }} ago</span>
+                </div>
+            </div>
+            {% empty %}
+            <p style="font-size: 0.875rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0;">No system logs available.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Controls (Filter / Search / Sort) -->
+<div class="controls-container">
+    <form method="get" action="{% url 'dashboard' %}" class="controls-form">
+        <!-- Search Query -->
+        <div class="form-group-filter">
+            <label class="filter-label" for="search-input">Search Employee</label>
+            <input type="text" name="search" id="search-input" class="filter-input" placeholder="Search name, ID, title..." value="{{ search_query }}">
+        </div>
+
+        <!-- Department Filter -->
+        <div class="form-group-filter">
+            <label class="filter-label" for="dept-select">Department</label>
+            <select name="department" id="dept-select" class="filter-input">
+                <option value="">All Departments</option>
+                {% for code, name in departments %}
+                    <option value="{{ code }}" {% if dept_filter == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="form-group-filter">
+            <label class="filter-label" for="status-select">Status</label>
+            <select name="status" id="status-select" class="filter-input">
+                <option value="">All Statuses</option>
+                {% for code, name in statuses %}
+                    <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Min Salary -->
+        <div class="form-group-filter">
+            <label class="filter-label" for="min-salary-input">Min Salary (₹)</label>
+            <input type="number" name="min_salary" id="min-salary-input" class="filter-input" placeholder="Min salary" value="{{ min_salary }}">
+        </div>
+
+        <!-- Max Salary -->
+        <div class="form-group-filter">
+            <label class="filter-label" for="max-salary-input">Max Salary (₹)</label>
+            <input type="number" name="max_salary" id="max-salary-input" class="filter-input" placeholder="Max salary" value="{{ max_salary }}">
+        </div>
+
+        <!-- Sort By -->
+        <div class="form-group-filter">
+            <label class="filter-label" for="sort-select">Sort By</label>
+            <select name="sort" id="sort-select" class="filter-input">
+                <option value="">Default</option>
+                <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name (A-Z)</option>
+                <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name (Z-A)</option>
+                <option value="salary_desc" {% if sort_by == 'salary_desc' %}selected{% endif %}>Salary (High to Low)</option>
+                <option value="salary_asc" {% if sort_by == 'salary_asc' %}selected{% endif %}>Salary (Low to High)</option>
+                <option value="hire_date_desc" {% if sort_by == 'hire_date_desc' %}selected{% endif %}>Hire Date (Newest)</option>
+                <option value="hire_date_asc" {% if sort_by == 'hire_date_asc' %}selected{% endif %}>Hire Date (Oldest)</option>
+            </select>
+        </div>
+
+        <!-- Filter Actions -->
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span>Filter</span>
+            </button>
+            <a href="{% url 'export_employees_csv' %}?search={{ search_query }}&department={{ dept_filter }}&status={{ status_filter }}&min_salary={{ min_salary }}&max_salary={{ max_salary }}&sort={{ sort_by }}" class="btn btn-secondary" title="Export matching records to CSV file" style="color: var(--success); border-color: rgba(16, 185, 129, 0.2);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Export CSV</span>
+            </a>
+            {% if search_query or dept_filter or status_filter or min_salary or max_salary or sort_by %}
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Employee Table -->
+<div class="table-card" style="margin-bottom: 0;">
+    <div class="table-header-row">
+        <h2 class="table-title">Employee Directory</h2>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{% url 'import_employees_csv' %}" class="btn btn-secondary" style="border-color: rgba(99, 102, 241, 0.3);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Import Staff</span>
+            </a>
+            <a href="{% url 'employee_create' %}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Add Employee</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Job Title</th>
+                    <th>Department</th>
+                    <th>Salary</th>
+                    <th>Hire Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees %}
+                <tr>
+                    <td style="font-family: monospace; font-weight: 600; color: var(--primary);">{{ employee.employee_id }}</td>
+                    <td>
+                        <a href="{% url 'employee_detail' employee.pk %}" style="color: var(--text-primary); text-decoration: none; font-weight: 600; transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-primary)'">
+                            {{ employee.first_name }} {{ employee.last_name }}
+                        </a>
+                    </td>
+                    <td>{{ employee.job_title }}</td>
+                    <td><span class="badge badge-dept">{{ employee.department }}</span></td>
+                    <td style="font-weight: 600;">₹{{ employee.salary|floatformat:2 }}</td>
+                    <td>{{ employee.hire_date|date:"M d, Y" }}</td>
+                    <td>
+                        {% if employee.status == 'Active' %}
+                            <span class="badge badge-active">{{ employee.status }}</span>
+                        {% elif employee.status == 'Inactive' %}
+                            <span class="badge badge-inactive">{{ employee.status }}</span>
+                        {% else %}
+                            <span class="badge badge-leave">{{ employee.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-links">
+                            <a href="{% url 'employee_detail' employee.pk %}" class="btn btn-secondary btn-icon-only" title="View details">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </a>
+                            <a href="{% url 'employee_update' employee.pk %}" class="btn btn-secondary btn-icon-only" title="Edit employee" style="color: var(--primary);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </a>
+                            <a href="{% url 'employee_delete' employee.pk %}" class="btn btn-secondary btn-icon-only" title="Delete employee" style="color: var(--danger);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 1rem; opacity: 0.5; display: inline-block;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                        <p>No employees found matching the filters.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    {% if employees.has_other_pages %}
+    <div class="pagination">
+        <div class="page-info">
+            Showing {{ employees.start_index }} to {{ employees.end_index }} of {{ employees.paginator.count }} employees
+        </div>
+        <div class="page-buttons">
+            {% if employees.has_previous %}
+                <a href="?page={{ employees.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if dept_filter %}&department={{ dept_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if min_salary %}&min_salary={{ min_salary }}{% endif %}{% if max_salary %}&max_salary={{ max_salary }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="btn btn-secondary">Previous</a>
+            {% else %}
+                <button class="btn btn-secondary" disabled>Previous</button>
+            {% endif %}
+
+            {% if employees.has_next %}
+                <a href="?page={{ employees.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if dept_filter %}&department={{ dept_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if min_salary %}&min_salary={{ min_salary }}{% endif %}{% if max_salary %}&max_salary={{ max_salary }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="btn btn-secondary">Next</a>
+            {% else %}
+                <button class="btn btn-secondary" disabled>Next</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Parse the JSON data sent from views.py
+        const deptLabels = JSON.parse('{{ dept_labels_json|safe }}');
+        const deptValues = JSON.parse('{{ dept_values_json|safe }}');
+        
+        const salaryLabels = JSON.parse('{{ salary_labels_json|safe }}');
+        const salaryValues = JSON.parse('{{ salary_values_json|safe }}');
+        
+        // Custom styling colors matching our dark theme
+        const colors = [
+            'rgba(99, 102, 241, 0.75)',   // Indigo
+            'rgba(16, 185, 129, 0.75)',  // Emerald/Green
+            'rgba(245, 158, 11, 0.75)',   // Amber/Orange
+            'rgba(139, 92, 246, 0.75)',   // Purple
+            'rgba(6, 182, 212, 0.75)',    // Cyan
+            'rgba(239, 68, 68, 0.75)'     // Red
+        ];
+        
+        const borderColors = [
+            '#6366f1',
+            '#10b981',
+            '#f59e0b',
+            '#8b5cf6',
+            '#06b6d4',
+            '#ef4444'
+        ];
+        
+        // 1. Staff Headcount Doughnut Chart
+        const ctxHeadcount = document.getElementById('deptHeadcountChart').getContext('2d');
+        new Chart(ctxHeadcount, {
+            type: 'doughnut',
+            data: {
+                labels: deptLabels,
+                datasets: [{
+                    data: deptValues,
+                    backgroundColor: colors.slice(0, deptLabels.length),
+                    borderColor: borderColors.slice(0, deptLabels.length),
+                    borderWidth: 1.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: '#9ca3af',
+                            font: { family: 'Inter', size: 11, weight: '500' },
+                            boxWidth: 12
+                        }
+                    }
+                }
+            }
+        });
+        
+        // 2. Average Salary by Department Bar Chart
+        const ctxSalary = document.getElementById('deptSalaryChart').getContext('2d');
+        new Chart(ctxSalary, {
+            type: 'bar',
+            data: {
+                labels: salaryLabels,
+                datasets: [{
+                    label: 'Avg Salary (₹)',
+                    data: salaryValues,
+                    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                    borderColor: '#6366f1',
+                    borderWidth: 2,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 12,
+                        right: 5
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#9ca3af',
+                            font: { family: 'Inter', size: 10 }
+                        }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            color: '#9ca3af',
+                            font: { family: 'Inter', size: 10 },
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

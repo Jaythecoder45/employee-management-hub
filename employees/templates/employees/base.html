@@ -1,0 +1,198 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sleek and modern Employee Management System for tracking records, salary data, and departments.">
+    <title>{% block title %}Employee Hub{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'employees/css/style.css' %}">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <a href="{% url 'dashboard' %}" class="sidebar-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span>Employee Hub</span>
+        </a>
+        <ul class="sidebar-menu">
+            {% if request.user.is_superuser or request.user.is_staff %}
+                <li>
+                    <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'employee_detail' or request.resolver_match.url_name == 'employee_update' %}active{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="9"></rect>
+                            <rect x="14" y="3" width="7" height="5"></rect>
+                            <rect x="14" y="12" width="7" height="9"></rect>
+                            <rect x="3" y="16" width="7" height="5"></rect>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'employee_create' %}" class="sidebar-link {% if request.resolver_match.url_name == 'employee_create' %}active{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <line x1="19" y1="8" x2="19" y2="14"></line>
+                            <line x1="22" y1="11" x2="16" y2="11"></line>
+                        </svg>
+                        <span>Add Employee</span>
+                    </a>
+                </li>
+                <li style="margin-top: 1.5rem; margin-bottom: 0.5rem; padding-left: 1rem;">
+                    <span style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;">Departments</span>
+                </li>
+                <li>
+                    <a href="{% url 'department_view' 'Engineering' %}" class="sidebar-link {% if dept_name == 'Engineering' %}active{% endif %}" style="padding-left: 1.5rem; font-size: 0.875rem;">
+                        <span>Engineering</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'department_view' 'Sales' %}" class="sidebar-link {% if dept_name == 'Sales' %}active{% endif %}" style="padding-left: 1.5rem; font-size: 0.875rem;">
+                        <span>Sales</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'department_view' 'HR' %}" class="sidebar-link {% if dept_name == 'HR' %}active{% endif %}" style="padding-left: 1.5rem; font-size: 0.875rem;">
+                        <span>Human Resources</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'department_view' 'Marketing' %}" class="sidebar-link {% if dept_name == 'Marketing' %}active{% endif %}" style="padding-left: 1.5rem; font-size: 0.875rem;">
+                        <span>Marketing</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'department_view' 'Finance' %}" class="sidebar-link {% if dept_name == 'Finance' %}active{% endif %}" style="padding-left: 1.5rem; font-size: 0.875rem;">
+                        <span>Finance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'department_view' 'Operations' %}" class="sidebar-link {% if dept_name == 'Operations' %}active{% endif %}" style="padding-left: 1.5rem; font-size: 0.875rem;">
+                        <span>Operations</span>
+                    </a>
+                </li>
+            {% else %}
+                <li>
+                    <a href="{% url 'employee_portal' %}" class="sidebar-link {% if request.resolver_match.url_name == 'employee_portal' %}active{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="9"></rect>
+                            <rect x="14" y="3" width="7" height="5"></rect>
+                            <rect x="14" y="12" width="7" height="9"></rect>
+                            <rect x="3" y="16" width="7" height="5"></rect>
+                        </svg>
+                        <span>My Portal</span>
+                    </a>
+                </li>
+            {% endif %}
+            <li style="margin-top: auto; padding-top: 2rem;">
+                <form action="{% url 'logout' %}" method="post" style="display: block; width: 100%;">
+                    {% csrf_token %}
+                    <button type="submit" class="sidebar-link" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; font-family: inherit; font-size: inherit; padding: 0.75rem 1rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Sign Out</span>
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <header class="topbar" style="position: relative; display: flex; align-items: center; justify-content: space-between;">
+            <h1 class="topbar-title">Employee Management System</h1>
+            
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                {% if request.user.is_authenticated %}
+                <div class="notifications-wrapper" style="position: relative; display: inline-block;">
+                    <button class="notifications-trigger" onclick="toggleNotificationsMenu()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; position: relative; padding: 0.25rem; display: flex; align-items: center; transition: var(--transition);" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        {% if unread_notifications_count > 0 %}
+                            <span class="notification-badge" style="position: absolute; top: -2px; right: -2px; background-color: #ef4444; color: white; border-radius: 50%; font-size: 0.65rem; font-weight: 700; width: 15px; height: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);">
+                                {{ unread_notifications_count }}
+                            </span>
+                        {% endif %}
+                    </button>
+
+                    <!-- Notifications Dropdown Menu -->
+                    <div id="notifications-menu" style="display: none; position: absolute; right: 0; top: 100%; width: 280px; background-color: var(--card-bg); border: 1px solid var(--border-hover); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1000; padding: 0.75rem; margin-top: 0.5rem; backdrop-filter: blur(10px);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-hover); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.825rem; font-weight: 700; color: var(--text-primary);">Notifications</span>
+                            {% if unread_notifications_count > 0 %}
+                                <a href="{% url 'mark_notifications_read' %}?next={{ request.path }}" style="font-size: 0.75rem; color: var(--primary); text-decoration: none; font-weight: 600;">Mark all as read</a>
+                            {% endif %}
+                        </div>
+                        <div style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem;">
+                            {% for notif in unread_notifications %}
+                                <div style="font-size: 0.775rem; color: var(--text-secondary); line-height: 1.35; padding: 0.5rem; border-radius: var(--radius-sm); background: rgba(255,255,255,0.01); border-left: 2.5px solid var(--primary); text-align: left;">
+                                    {{ notif.message }}
+                                    <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.25rem;">{{ notif.created_at|timesince }} ago</div>
+                                </div>
+                            {% empty %}
+                                <p style="font-size: 0.775rem; color: var(--text-muted); text-align: center; padding: 1rem 0; margin: 0; font-style: italic;">No unread notifications.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--success);"></span>
+                    <span>Role: {% if request.user.is_superuser or request.user.is_staff %}HR Admin{% else %}Employee{% endif %} ({{ request.user.username }})</span>
+                </div>
+            </div>
+        </header>
+
+        <script>
+            function toggleNotificationsMenu() {
+                const menu = document.getElementById('notifications-menu');
+                if (menu.style.display === 'none') {
+                    menu.style.display = 'block';
+                } else {
+                    menu.style.display = 'none';
+                }
+            }
+            window.addEventListener('click', function(e) {
+                const wrapper = document.querySelector('.notifications-wrapper');
+                const menu = document.getElementById('notifications-menu');
+                if (menu && wrapper && !wrapper.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            });
+        </script>
+
+        <main class="content-body">
+            <!-- Toast Flash Messages -->
+            {% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" id="message-{{ forloop.counter }}">
+                            <span>{{ message }}</span>
+                            <button class="alert-close" onclick="document.getElementById('message-{{ forloop.counter }}').remove();">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+    
+    <div class="toast-container" id="toast-container"></div>
+    
+    <script src="{% static 'employees/js/main.js' %}"></script>
+</body>
+</html>

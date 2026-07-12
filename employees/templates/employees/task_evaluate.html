@@ -1,0 +1,79 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Evaluate Task | Employee Hub{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 600px; margin: 0 auto;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <h2 class="form-title" style="margin: 0;">Evaluate Performance</h2>
+        <a href="{% url 'employee_detail' employee.pk %}" class="btn btn-secondary">Cancel</a>
+    </div>
+
+    <div style="background-color: rgba(99, 102, 241, 0.05); border: 1px solid var(--border-hover); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.75rem;">
+        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 0.95rem;">Task Details</h4>
+        <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.15rem;">{{ task.title }}</h3>
+        <p style="margin: 0 0 1rem 0; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">{{ task.description|default:"No description provided." }}</p>
+        
+        {% if task.work_submission or task.submission_notes %}
+            <div style="border-top: 1px solid var(--border-hover); padding-top: 1rem; margin-top: 1rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #f59e0b; font-size: 0.9rem;">Employee Submission</h4>
+                {% if task.work_submission %}
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-size: 0.825rem; color: var(--text-secondary);">Attached File: <strong>{{ task.work_submission.name|cut:"submissions/" }}</strong></span>
+                        <a href="{{ task.work_submission.url }}" target="_blank" class="btn btn-secondary" style="font-size: 0.725rem; padding: 0.25rem 0.5rem; text-decoration: none; border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">
+                            Download File
+                        </a>
+                    </div>
+                {% endif %}
+                {% if task.submission_notes %}
+                    <p style="margin: 0; font-size: 0.825rem; color: var(--text-muted); font-style: italic; background: rgba(0,0,0,0.1); padding: 0.5rem; border-radius: var(--radius-sm);">
+                        Notes: "{{ task.submission_notes }}"
+                    </p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <form method="post" class="django-form" novalidate>
+        {% csrf_token %}
+        
+        <div class="form-field-group">
+            <label class="form-label" for="id_status">Mark Completion Status</label>
+            {{ form.status }}
+            {% if form.status.errors %}
+                <span class="field-error">{{ form.status.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-field-group">
+            <label class="form-label" for="id_rating">Performance Rating (1 to 5 Stars)</label>
+            {{ form.rating }}
+            <p style="margin: 0.35rem 0 0 0; color: var(--text-muted); font-size: 0.775rem;">Input a rating scale between 1 (Poor) and 5 (Outstanding).</p>
+            {% if form.rating.errors %}
+                <span class="field-error">{{ form.rating.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-field-group">
+            <label class="form-label" for="id_grade">Evaluation Grade</label>
+            {{ form.grade }}
+            <p style="margin: 0.35rem 0 0 0; color: var(--text-muted); font-size: 0.775rem;">Input a letter grade score (e.g., A+, A, B, C).</p>
+            {% if form.grade.errors %}
+                <span class="field-error">{{ form.grade.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-field-group">
+            <label class="form-label" for="id_feedback">Review Feedback</label>
+            {{ form.feedback }}
+            {% if form.feedback.errors %}
+                <span class="field-error">{{ form.feedback.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem; margin-top: 1.5rem; background-color: var(--success); border-color: var(--success);" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+            Submit Evaluation
+        </button>
+    </form>
+</div>
+{% endblock %}

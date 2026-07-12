@@ -1,0 +1,32 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Sensitive Credentials / Configuration
+.env
+
+# Local Database
+db.sqlite3
+
+# User Uploaded Media Files
+media/
+media/submissions/
+
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE configurations
+.vscode/
+.idea/
+.project
+.pydevproject
+.settings/
+
+# OS generated files
+Thumbs.db
+desktop.ini
+.DS_Store
