@@ -150,6 +150,7 @@ if os.environ.get('SMTP_HOST'):
     EMAIL_HOST_USER = os.environ.get('SMTP_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('SMTP_PASSWORD')
     DEFAULT_FROM_EMAIL = os.environ.get('SMTP_FROM_EMAIL', EMAIL_HOST_USER)
+    EMAIL_TIMEOUT = 5
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     DEFAULT_FROM_EMAIL = 'notifications@employeehub.com'
