@@ -196,7 +196,10 @@ def employee_create(request):
             employee = form.save()
             
             # Auto-create User account & link it
-            create_employee_user_account(employee, request)
+            try:
+                create_employee_user_account(employee, request)
+            except Exception as e:
+                print(f"Error creating user account: {e}")
             
             # Create ActivityLog
             ActivityLog.objects.create(
@@ -555,7 +558,10 @@ def import_employees_csv(request):
                     hire_date=hire_date,
                     status=status
                 )
-                create_employee_user_account(employee, request)
+                try:
+                    create_employee_user_account(employee, request)
+                except Exception as e:
+                    print(f"Error creating user account in import: {e}")
                 success_count += 1
                 
             if success_count > 0:
