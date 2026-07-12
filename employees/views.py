@@ -28,13 +28,17 @@ def send_employee_welcome_email(employee, request=None):
         f"Regards,\n"
         f"HR Operations Team"
     )
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [employee.email],
-        fail_silently=True,
-    )
+    try:
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'notifications@employeehub.com'
+        send_mail(
+            subject,
+            message,
+            from_email,
+            [employee.email],
+            fail_silently=True,
+        )
+    except Exception as e:
+        print(f"Error sending welcome email: {e}")
 
 def create_employee_user_account(employee, request=None):
     if not employee.user:
@@ -650,7 +654,11 @@ def assign_task(request, pk):
                     f"Please log in to your portal to review details.\n\n"
                     f"Employee Hub"
                 )
-                send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [employee.email], fail_silently=True)
+                try:
+                    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'notifications@employeehub.com'
+                    send_mail(subject, email_msg, from_email, [employee.email], fail_silently=True)
+                except Exception as e:
+                    print(f"Error sending assignment email: {e}")
             
             ActivityLog.objects.create(
                 user=request.user,
@@ -694,7 +702,11 @@ def evaluate_task(request, task_id):
                     f"Employee Hub"
                 )
                     
-                send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [employee.email], fail_silently=True)
+                try:
+                    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'notifications@employeehub.com'
+                    send_mail(subject, email_msg, from_email, [employee.email], fail_silently=True)
+                except Exception as e:
+                    print(f"Error sending evaluation email: {e}")
             
             rating_stars = f"{task.rating} Star{'s' if task.rating > 1 else ''}" if task.rating else "No Stars"
             ActivityLog.objects.create(
@@ -782,7 +794,11 @@ def update_task_status(request, task_id):
                             f"New Status: {new_status}\n\n"
                             f"Log in to review: http://{request.get_host()}/employee/{employee.pk}/\n"
                         )
-                        send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [admin.email], fail_silently=True)
+                        try:
+                            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'notifications@employeehub.com'
+                            send_mail(subject, email_msg, from_email, [admin.email], fail_silently=True)
+                        except Exception as e:
+                            print(f"Error sending status update email: {e}")
             
             messages.success(request, f"Task '{task.title}' status successfully set to '{new_status}'!")
             
@@ -835,7 +851,11 @@ def bulk_assign_task(request):
                         f"Due Date: {due_date.strftime('%Y-%m-%d')}\n\n"
                         f"Log in to your portal to submit updates: http://{request.get_host()}/portal/\n"
                     )
-                    send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [employee.email], fail_silently=True)
+                    try:
+                        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'notifications@employeehub.com'
+                        send_mail(subject, email_msg, from_email, [employee.email], fail_silently=True)
+                    except Exception as e:
+                        print(f"Error sending bulk task email: {e}")
             
             ActivityLog.objects.create(
                 user=request.user,
@@ -918,7 +938,11 @@ def submit_task_work(request, task_id):
                         f"Notes: {task.submission_notes or 'No notes provided.'}\n\n"
                         f"Log in to review: http://{request.get_host()}/employee/{employee.pk}/\n"
                     )
-                    send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [admin.email], fail_silently=True)
+                    try:
+                        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'notifications@employeehub.com'
+                        send_mail(subject, email_msg, from_email, [admin.email], fail_silently=True)
+                    except Exception as e:
+                        print(f"Error sending review request email: {e}")
             
             messages.success(request, f"Task '{task.title}' successfully submitted for review!")
             return redirect('employee_portal')
