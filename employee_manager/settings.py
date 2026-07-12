@@ -142,7 +142,12 @@ LOGOUT_REDIRECT_URL = 'login'
 
 # Email Notification Settings
 import os
-if os.environ.get('SMTP_HOST'):
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+
+if SENDGRID_API_KEY:
+    EMAIL_BACKEND = 'employees.email_backend.SendGridAPIBackend'
+    DEFAULT_FROM_EMAIL = os.environ.get('SMTP_FROM_EMAIL', 'jaydeepshinde9391js@gmail.com')
+elif os.environ.get('SMTP_HOST'):
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = os.environ.get('SMTP_HOST')
     EMAIL_PORT = int(os.environ.get('SMTP_PORT', 587))
