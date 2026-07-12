@@ -44,6 +44,12 @@ if os.environ.get('DATABASE_URL'):
         ALLOWED_HOSTS = [render_host, 'localhost', '127.0.0.1']
     else:
         ALLOWED_HOSTS = ['employee-management-hub.onrender.com', 'localhost', '127.0.0.1']
+    
+    # HTTPS Security settings for production
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 else:
     DEBUG = True
     ALLOWED_HOSTS = ['*']
