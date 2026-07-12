@@ -37,9 +37,16 @@ if os.path.exists(env_path):
 SECRET_KEY = 'django-insecure-*@s_n29usy7_sryin*7gh6+_6i%d8cti%gp4=g1-0bbd-r17f('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+if os.environ.get('DATABASE_URL'):
+    DEBUG = False
+    render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+    if render_host:
+        ALLOWED_HOSTS = [render_host, 'localhost', '127.0.0.1']
+    else:
+        ALLOWED_HOSTS = ['employee-management-hub.onrender.com', 'localhost', '127.0.0.1']
+else:
+    DEBUG = True
+    ALLOWED_HOSTS = ['*']
 
 
 # Application definition
